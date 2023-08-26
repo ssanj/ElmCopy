@@ -10,8 +10,8 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
 
   print("ElmCopy is running........")
   function_def_reg: str = r'^([a-z][a-z|A-Z|0-9]*)\s*:\s*[A-Z]'
-  let_statement_reg = r'^\s+let'
-  in_statement_reg = r'^\s+in'
+  let_statement_reg = r'^\s+let(\s*$|\s+[A-Z|a-z|0-9]+)'
+  in_statement_reg = r'^\s+in(\s*$|\s+[A-Z|a-z|0-9]+)'
   debug = True
 
   def run(self, edit: sublime.Edit) -> None:
@@ -30,7 +30,10 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
       starting_region_converted = self.row_to_region(self.view, starting_line)
       line = self.get_region_line(self.view, starting_region)
 
-      ending_region = self.find_bottom_of_function(self.view, starting_region, last_line_number)
+      # We need to search for the bottom of the function, starting from the very top of the definition,
+      # not, where the cursor is. This is because we want to handle let/in pairs, which can't be
+      # tracked from the middle of the function
+      ending_region = self.find_bottom_of_function(self.view, function_definiton_region, last_line_number)
 
       if ElmCopyCommand.debug:
         print(f"starting region={starting_region}")
@@ -100,9 +103,9 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
     lets = 0
     region = starting_from
 
-    while safe_guard < 10: # make this configurable
+    while safe_guard < 20: # make this configurable
       line = self.get_region_line(view, region)
-      print(f"line: {safe_guard} {line}")
+      print(f"line: {safe_guard} {line}, lets:{lets}")
 
       if len(line) == 0 and lets == 0:
         return region
@@ -117,7 +120,7 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
 
         line_number: int = self.region_to_row(view, region)
         next_line_number: int = line_number + 1
-        print(f"next_line_number: {safe_guard} {next_line_number}")
+        print(f"next_line_number: {safe_guard} {next_line_number}, lets:{lets}")
 
         # check for jumping over the last line of the file
         region = self.row_to_region(view, next_line_number)
