@@ -96,7 +96,7 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
     return function_body
 
   def rename_function(self, original_function: str, existing_name: str, new_name: str) -> str:
-    print(f'existing name: {existing_name}')
+    self.debug(self.settings.debug, f'renaming existing function name: {existing_name}')
     function_def_replacement_reg: str = f'^{existing_name}(\\s*:)'
     function_impl_replacement_reg: str = f'^{existing_name}(\\s*([a-zA-Z0-9]+\\s*=))'
     first_group = r'\1'
