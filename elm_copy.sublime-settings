@@ -1,0 +1,11 @@
+{
+  // The longest function that can be parsed. Increase if longer functions are needed. This is a sanity check to ensure
+  // the parser isn't going into an infinite loop.
+  "max_function_length": 20,
+
+  // Whether to turn on debug logging
+  "debug": false,
+
+  // number of lines to use as a margin before and after the copied function.
+  "margin": 2
+}

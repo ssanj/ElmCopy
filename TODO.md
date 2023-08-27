@@ -5,7 +5,7 @@
 - [x] Paste function body with new name below current function
 
 ## Clean up
-- [] Move safe_guard to configuration
-- [] Move debug logging to configuration
+- [x] Move safe_guard to configuration
+- [x] Move debug logging to configuration
 - [] Remove unnecessary logging or move behind debug flag
 

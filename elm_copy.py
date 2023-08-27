@@ -1,8 +1,20 @@
-from re import DOTALL
 import sublime, sublime_plugin
-from typing import Optional, List, Callable
+from typing import Optional, List
 
-from . import function_detail as FD
+try:
+  import function_detail as FD
+except ImportError:
+  from . import function_detail as FD
+
+try:
+  import settings_loader as SL
+except ImportError:
+  from . import settings_loader as SL
+
+try:
+  import elm_copy_setting as ECS
+except ImportError:
+  from . import elm_copy_setting as ECS
 
 import re
 
@@ -17,6 +29,10 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
   def run(self, edit: sublime.Edit) -> None:
     if self and self.view:
       print("ElmCopy is running")
+      self.settings: sublime.Settings = sublime.load_settings('elm_copy.sublime-settings')
+      settings_loader = SL.SettingsLoader(self.settings)
+      elm_copy_settings = settings_loader.load()
+      print(f'[ElmCopy] - settings: {elm_copy_settings}')
 
       cursor_location_region = self.view.sel()[0] # check if this is valid
       last_line_number_in_file = self.get_last_line_number(self.view)
