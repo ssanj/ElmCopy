@@ -18,8 +18,7 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
     if self and self.view:
       print("ElmCopy is running")
       self.settings: sublime.Settings = sublime.load_settings('elm_copy.sublime-settings')
-      settings_loader = SL.SettingsLoader(self.settings)
-      elm_copy_settings = settings_loader.load()
+      elm_copy_settings = SL.SettingsLoader(self.settings).load()
       print(f'[ElmCopy] - settings: {elm_copy_settings}')
 
       cursor_location_region = self.view.sel()[0] # check if this is valid
