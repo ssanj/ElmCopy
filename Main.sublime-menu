@@ -17,7 +17,7 @@
                         [
                             {
                                 "command": "edit_settings", "args": {
-                                    "base_file": "${packages}/ElmCopy/ElmCopy.sublime-settings",
+                                    "base_file": "${packages}/ElmCopy/elm-copy.sublime-settings",
                                     "default": "{\n$0\n}\n"
                                 },
                                 "caption": "Settings"
