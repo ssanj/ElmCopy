@@ -8,13 +8,6 @@ import re
 
 class ElmCopyCommand(sublime_plugin.TextCommand):
 
-  @staticmethod
-  def log(message: str):
-    print(f'[ElmCopy] - {message}')
-
-  @staticmethod
-  def warn(message: str):
-    ElmCopyCommand.log(f'[WARN] - {message}')
 
   print("elm_copy command has loaded.")
 
@@ -205,9 +198,12 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
     lines = list(map(lambda region: view.substr(region), line_regions))
     return '\n'.join(lines)
 
+  def log(self, message: str):
+    print(f'[ElmCopy] - {message}')
+
   def debug(self, debug: bool, message: str):
     if debug:
-      ElmCopyCommand.log(f'[DEBUG] - {message}')
+      print(f'[ElmCopy][DEBUG] - {message}')
 
 
 class ReplaceFunctionCommand(sublime_plugin.TextCommand):

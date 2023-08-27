@@ -1,6 +1,5 @@
 import sublime
 
-from . import elm_copy as ECC
 from . import elm_copy_setting as ECS
 
 class SettingsLoader:
@@ -11,7 +10,9 @@ class SettingsLoader:
 
   def __init__(self, settings: sublime.Settings) -> None:
     self.settings = settings
-    self.log = ECC.ElmCopyCommand.warn
+
+  def log(self, message: str):
+    print(f'[ElmCopy][WARN] - {message}')
 
   def load(self) -> ECS.ElmCopySetting:
     max_function_length: int = self.get_max_function_length()
