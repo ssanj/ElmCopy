@@ -7,5 +7,5 @@
 ## Clean up
 - [x] Move safe_guard to configuration
 - [x] Move debug logging to configuration
-- [] Remove unnecessary logging or move behind debug flag
+- [x] Remove unnecessary logging or move behind debug flag
 
