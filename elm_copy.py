@@ -8,7 +8,6 @@ import re
 
 class ElmCopyCommand(sublime_plugin.TextCommand):
 
-
   print("elm_copy command has loaded.")
 
   function_def_reg: str = r'^([a-z][a-z|A-Z|0-9]*)\s*:(\s*$|\s*[A-Z])'
@@ -98,11 +97,14 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
   def rename_function(self, original_function: str, existing_name: str, new_name: str) -> str:
     self.debug(self.settings.debug, f'renaming existing function name: {existing_name}')
     function_def_replacement_reg: str = f'^{existing_name}(\\s*:)'
-    function_impl_replacement_reg: str = f'^{existing_name}(\\s*([a-zA-Z0-9]+\\s*=))'
+    function_impl_replacement_reg: str = f'^{existing_name}(\\s*([a-zA-Z0-9]+\\s*)*\\s*=)'
     first_group = r'\1'
 
     function_with_new_def_name = re.sub(function_def_replacement_reg, f'{new_name}{first_group}', original_function, count = 1, flags = re.MULTILINE)
     function_with_new_impl_name = re.sub(function_impl_replacement_reg, f'{new_name}{first_group}', function_with_new_def_name, count = 1, flags = re.MULTILINE)
+
+    self.debug(self.settings.debug, f'renamed function definition name: {function_with_new_def_name}')
+    self.debug(self.settings.debug, f'renamed function implementation name: {function_with_new_impl_name}')
 
     return function_with_new_impl_name
 
