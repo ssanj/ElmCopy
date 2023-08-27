@@ -39,7 +39,6 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
       starting_line = self.region_to_row(self.view, cursor_location_region)
       self.debug(self.settings.debug, f"line number at cursor={starting_line}")
 
-      starting_region_converted = self.row_to_region(self.view, starting_line)
       line = self.get_region_line(self.view, cursor_location_region)
       self.debug(self.settings.debug, f"cursor line contents={line}")
 
@@ -49,7 +48,7 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
       end_of_function_implementation_region = self.find_bottom_of_function(self.view, start_of_function_definiton_region, last_line_number_in_file)
       self.debug(self.settings.debug, f"function ending region={end_of_function_implementation_region}")
 
-      self.replace_function(self.view, edit, start_of_function_definiton_region, end_of_function_implementation_region, function_name)
+      self.replace_function(self.view, start_of_function_definiton_region, end_of_function_implementation_region, function_name)
     else:
       sublime.message_dialog("Could not find self")
 
@@ -70,23 +69,23 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
      else:
         return False
 
-  def replace_function(self, view: sublime.View, edit: sublime.Edit, starting: sublime.Region, ending: sublime.Region, existing_name: str):
+  def replace_function(self, view: sublime.View, starting: sublime.Region, ending: sublime.Region, existing_name: str):
     window = view.window()
     if window is not None:
       def on_done_function(new_name: str):
-        self.function_name_chosen(view, edit, starting, ending, existing_name, new_name)
+        self.function_name_chosen(view, starting, ending, existing_name, new_name)
 
       window.show_input_panel("Enter the name of the new function", existing_name, on_done=on_done_function, on_cancel=None, on_change=None)
     else:
       sublime.message_dialog("Could not find window for current view")
 
-  def function_name_chosen(self, view: sublime.View, edit: sublime.Edit, starting: sublime.Region, ending: sublime.Region, existing_name: str, new_name: str):
+  def function_name_chosen(self, view: sublime.View, starting: sublime.Region, ending: sublime.Region, existing_name: str, new_name: str):
     function_content = self.get_function_content(view, starting, ending)
     renamed_function = self.rename_function(original_function=function_content, existing_name=existing_name, new_name=new_name)
     margin = '\n\n' # make this configurable
     new_function = f'{margin}{renamed_function}{margin}'
 
-    self.copy_function(view, edit, new_function, ending)
+    self.copy_function(view, new_function, ending)
 
 
   def get_function_content(self, view: sublime.View, starting: sublime.Region, ending: sublime.Region) -> str:
@@ -107,7 +106,7 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
 
     return function_with_new_impl_name
 
-  def copy_function(self, view: sublime.View, edit: sublime.Edit, function_content: str, ending: sublime.Region):
+  def copy_function(self, view: sublime.View, function_content: str, ending: sublime.Region):
     view.run_command('replace_function', { "region": [ending.begin(), ending.end()], "text": function_content })
 
   def get_last_line_number(self, view: sublime.View) -> int:
@@ -167,6 +166,9 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
         next_line_number: int = current_line_number + 1
         self.debug(self.settings.debug, f"iteration: {safe_guard} - next line number:{next_line_number}, lets:{lets}")
 
+        if next_line_number > last_line:
+          return cast(sublime.Region, self.failOutOfBoundsError(last_line))
+
         # check for jumping over the last line of the file
         region = self.row_to_region(view, next_line_number)
 
@@ -176,6 +178,11 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
 
   def failWithSafeGuardError(self, max_lines_to_consider: int) -> None:
     error = f"safe_guard exceeded {max_lines_to_consider} lines.\nTo support longer functions update the `max_function_length` setting to a value > {max_lines_to_consider}"
+    sublime.message_dialog(error)
+    raise Exception(error)
+
+  def failOutOfBoundsError(self, lines_in_file: int) -> None:
+    error = f"File length exceeded {lines_in_file} lines."
     sublime.message_dialog(error)
     raise Exception(error)
 
