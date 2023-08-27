@@ -1,7 +1,7 @@
 # TODOs
 
 ## Features
-- [] Ask for new function name
+- [x] Ask for new function name
 - [x] Paste function body with new name below current function
 
 ## Clean up

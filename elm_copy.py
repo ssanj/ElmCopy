@@ -1,6 +1,6 @@
 from re import DOTALL
 import sublime, sublime_plugin
-from typing import Optional, List
+from typing import Optional, List, Callable
 
 from . import function_detail as FD
 
@@ -65,10 +65,21 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
         return False
 
   def replace_function(self, view: sublime.View, edit: sublime.Edit, starting: sublime.Region, ending: sublime.Region, existing_name: str):
+    window = view.window()
+    if window is not None:
+      def on_done_function(new_name: str):
+        self.function_name_chosen(view, edit, starting, ending, existing_name, new_name)
+
+      window.show_input_panel("Enter the name of the new function", existing_name, on_done=on_done_function, on_cancel=None, on_change=None)
+    else:
+      sublime.message_dialog("Could not find window for current view")
+
+  def function_name_chosen(self, view: sublime.View, edit: sublime.Edit, starting: sublime.Region, ending: sublime.Region, existing_name: str, new_name: str):
     function_content = self.get_function_content(view, starting, ending)
-    renamed_function = self.rename_function(original_function=function_content, existing_name=existing_name, new_name="replacedFunction") # get this from the ui
+    renamed_function = self.rename_function(original_function=function_content, existing_name=existing_name, new_name=new_name)
     margin = '\n\n' # make this configurable
-    new_function = f'{margin}{renamed_function}'
+    new_function = f'{margin}{renamed_function}{margin}'
+
     self.copy_function(view, edit, new_function, ending)
 
 
@@ -91,7 +102,7 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
     return function_with_new_impl_name
 
   def copy_function(self, view: sublime.View, edit: sublime.Edit, function_content: str, ending: sublime.Region):
-    view.replace(edit, ending, function_content)
+    view.run_command('replace_function', { "region": [ending.begin(), ending.end()], "text": function_content })
 
   def get_last_line_number(self, view: sublime.View) -> int:
     region = sublime.Region(0, view.size())
@@ -172,3 +183,10 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
     line_regions: List[sublime.Region] = view.lines(region)
     lines = list(map(lambda region: view.substr(region), line_regions))
     return '\n'.join(lines)
+
+class ReplaceFunctionCommand(sublime_plugin.TextCommand):
+
+  def run(self, edit: sublime.Edit, region: sublime.Region, text: str) -> None:
+      if self and self.view:
+        region = sublime.Region(*region)
+        self.view.replace(edit, region, text)
