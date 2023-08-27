@@ -9,7 +9,7 @@ import re
 class ElmCopyCommand(sublime_plugin.TextCommand):
 
   print("ElmCopy is running........")
-  function_def_reg: str = r'^([a-z][a-z|A-Z|0-9]*)\s*:\s*[A-Z]'
+  function_def_reg: str = r'^([a-z][a-z|A-Z|0-9]*)\s*:(\s*$|\s*[A-Z])'
   let_statement_reg = r'^\s+let(\s*$|\s+[A-Z|a-z|0-9]+)'
   in_statement_reg = r'^\s+in(\s*$|\s+[A-Z|a-z|0-9]+)'
   debug = True
@@ -46,7 +46,7 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
         print(f"starting region from line={starting_region_converted}")
         print(f"ending region={ending_region}")
 
-      self.copy_function(self.view, function_definiton_region, ending_region)
+      self.copy_function(self.view, edit, function_definiton_region, ending_region)
     else:
       sublime.message_dialog("Could not find self")
 
@@ -64,12 +64,14 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
      else:
         return False
 
-  def copy_function(self, view: sublime.View, starting: sublime.Region, ending: sublime.Region):
+  def copy_function(self, view: sublime.View, edit: sublime.Edit , starting: sublime.Region, ending: sublime.Region):
     function_region = sublime.Region(starting.begin(), ending.end())
     print(f"body region: {function_region}")
     function_body = self.get_all_region_lines(view, function_region)
     print(f"body: {function_body}")
-    # view.set_clipboard(function_body)
+    function_body_with_margin = f"\n\n{function_body}"
+
+    view.replace(edit, ending, function_body_with_margin)
 
   def get_last_line_number(self, view: sublime.View) -> int:
     region = sublime.Region(0, view.size())
@@ -80,7 +82,7 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
     safe_guard = 0
     region = starting_from
 
-    while safe_guard < 10: # make this configurable
+    while safe_guard < 20: # make this configurable
       line = self.get_region_line(view, region)
       function_names = re.findall(ElmCopyCommand.function_def_reg, line)
 
