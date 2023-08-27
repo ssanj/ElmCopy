@@ -1,9 +1,6 @@
 import sublime
 
-try:
-  import elm_copy_setting as ECS
-except ImportError:
-  from . import elm_copy_setting as ECS
+from . import elm_copy_setting as ECS
 
 class SettingsLoader:
   def __init__(self, settings: sublime.Settings) -> None:

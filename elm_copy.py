@@ -1,21 +1,9 @@
 import sublime, sublime_plugin
 from typing import Optional, List
 
-try:
-  import function_detail as FD
-except ImportError:
-  from . import function_detail as FD
-
-try:
-  import settings_loader as SL
-except ImportError:
-  from . import settings_loader as SL
-
-try:
-  import elm_copy_setting as ECS
-except ImportError:
-  from . import elm_copy_setting as ECS
-
+from . import function_detail as FD
+from . import settings_loader as SL
+from . import elm_copy_setting as ECS
 import re
 
 class ElmCopyCommand(sublime_plugin.TextCommand):

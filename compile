@@ -1,3 +1,3 @@
 #!/bin/bash
-
-chokidar "**/*.py" -c "/Users/sanj/.installations/bin/mypy -m elm_copy"
+cd ..
+MYPYPATH=./ElmCopy/typings chokidar "./ElmCopy/**/*.py" -c "/Users/sanj/.installations/bin/mypy  ElmCopy/elm_copy.py"
