@@ -55,7 +55,7 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
       sublime.message_dialog("Could not find self")
 
   def load_settings(self) -> ECS.ElmCopySetting:
-    loaded_settings: sublime.Settings = sublime.load_settings('elm_copy.sublime-settings')
+    loaded_settings: sublime.Settings = sublime.load_settings('ElmCopy.sublime-settings')
     return SL.SettingsLoader(loaded_settings).load()
 
   def is_enabled(self) -> bool:
