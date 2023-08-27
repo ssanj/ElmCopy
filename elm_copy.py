@@ -16,7 +16,7 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
   def warn(message: str):
     ElmCopyCommand.log(f'[WARN] - {message}')
 
-  ElmCopyCommand.log("elm_copy command has loaded.")
+  print("elm_copy command has loaded.")
 
   function_def_reg: str = r'^([a-z][a-z|A-Z|0-9]*)\s*:(\s*$|\s*[A-Z])'
   let_statement_reg = r'^\s+let(\s*$|\s+[A-Z|a-z|0-9]+)'
