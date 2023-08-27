@@ -18,35 +18,35 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
     if self and self.view:
       print("ElmCopy is running")
 
-      starting_region = self.view.sel()[0] # check if this is valid
-      last_line_number = self.get_last_line_number(self.view)
+      cursor_location_region = self.view.sel()[0] # check if this is valid
+      last_line_number_in_file = self.get_last_line_number(self.view)
 
+      function_detail = self.find_top_of_function(self.view, cursor_location_region)
 
-      function_detail = self.find_top_of_function(self.view, starting_region)
-
-      function_definiton_region = function_detail.function_region
-      starting_line = self.region_to_row(self.view, starting_region)
+      start_of_function_definiton_region = function_detail.function_region
+      function_name = function_detail.function_name
+      starting_line = self.region_to_row(self.view, cursor_location_region)
 
       starting_region_converted = self.row_to_region(self.view, starting_line)
-      line = self.get_region_line(self.view, starting_region)
+      line = self.get_region_line(self.view, cursor_location_region)
 
       # We need to search for the bottom of the function, starting from the very top of the definition,
       # not, where the cursor is. This is because we want to handle let/in pairs, which can't be
       # tracked from the middle of the function
-      ending_region = self.find_bottom_of_function(self.view, function_definiton_region, last_line_number)
+      end_of_function_implementation_region = self.find_bottom_of_function(self.view, start_of_function_definiton_region, last_line_number_in_file)
 
       if ElmCopyCommand.debug:
-        print(f"starting region={starting_region}")
+        print(f"starting region={cursor_location_region}")
         print(f"function name={function_detail.function_name}")
 
         print(f"first line number={starting_line}")
-        print(f"last line={last_line_number}")
+        print(f"last line={last_line_number_in_file}")
 
         print(f"starting line={line}")
         print(f"starting region from line={starting_region_converted}")
-        print(f"ending region={ending_region}")
+        print(f"ending region={end_of_function_implementation_region}")
 
-      self.copy_function(self.view, edit, function_definiton_region, ending_region)
+      self.replace_function(self.view, edit, start_of_function_definiton_region, end_of_function_implementation_region, function_name)
     else:
       sublime.message_dialog("Could not find self")
 
@@ -64,14 +64,34 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
      else:
         return False
 
-  def copy_function(self, view: sublime.View, edit: sublime.Edit , starting: sublime.Region, ending: sublime.Region):
+  def replace_function(self, view: sublime.View, edit: sublime.Edit, starting: sublime.Region, ending: sublime.Region, existing_name: str):
+    function_content = self.get_function_content(view, starting, ending)
+    renamed_function = self.rename_function(original_function=function_content, existing_name=existing_name, new_name="replacedFunction") # get this from the ui
+    margin = '\n\n' # make this configurable
+    new_function = f'{margin}{renamed_function}'
+    self.copy_function(view, edit, new_function, ending)
+
+
+  def get_function_content(self, view: sublime.View, starting: sublime.Region, ending: sublime.Region) -> str:
     function_region = sublime.Region(starting.begin(), ending.end())
     print(f"body region: {function_region}")
     function_body = self.get_all_region_lines(view, function_region)
     print(f"body: {function_body}")
-    function_body_with_margin = f"\n\n{function_body}"
+    return function_body
 
-    view.replace(edit, ending, function_body_with_margin)
+  def rename_function(self, original_function: str, existing_name: str, new_name: str) -> str:
+    print(f'existing name: {existing_name}')
+    function_def_replacement_reg: str = f'^{existing_name}(\\s*:)'
+    function_impl_replacement_reg: str = f'^{existing_name}(\\s*([a-zA-Z0-9]+\\s*=))'
+    first_group = r'\1'
+
+    function_with_new_def_name = re.sub(function_def_replacement_reg, f'{new_name}{first_group}', original_function, count = 1, flags = re.MULTILINE)
+    function_with_new_impl_name = re.sub(function_impl_replacement_reg, f'{new_name}{first_group}', function_with_new_def_name, count = 1, flags = re.MULTILINE)
+
+    return function_with_new_impl_name
+
+  def copy_function(self, view: sublime.View, edit: sublime.Edit, function_content: str, ending: sublime.Region):
+    view.replace(edit, ending, function_content)
 
   def get_last_line_number(self, view: sublime.View) -> int:
     region = sublime.Region(0, view.size())
@@ -87,7 +107,8 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
       function_names = re.findall(ElmCopyCommand.function_def_reg, line)
 
       if len(function_names) != 0:
-        return FD.FunctionDetail(function_names[0], region)
+        # add a check for tuple with two elements
+        return FD.FunctionDetail(function_names[0][0], region)
       else:
         line_number: int = self.region_to_row(view, region)
         prev_line_number: int = line_number - 1
