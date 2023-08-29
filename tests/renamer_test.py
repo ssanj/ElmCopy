@@ -179,7 +179,7 @@ xyzJobs { baseApiUrl, onResponse } =
 
   def assert_rename(self, existing_name: str, new_name: str, existing_function: str , expected_function: str) -> None:
     renamer = R.Renamer()
-    new_function = renamer.rename(existing_function, existing_name, new_name)
+    new_function = renamer.rename(existing_function, existing_name, new_name).final_result
     # print(f'new_function===========================> {new_function}')
     self.assertEqual(new_function, expected_function)
 

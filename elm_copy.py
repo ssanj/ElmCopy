@@ -11,42 +11,42 @@ import re
 
 class ElmCopyCommand(sublime_plugin.TextCommand):
 
-  print("elm_copy command has loaded.")
+  print("elm_copy command has loaded 2.")
 
   def run(self, edit: sublime.Edit) -> None:
     if self and self.view:
       self.log("elm_copy command is running")
 
       self.settings: ECS.ElmCopySetting = self.load_settings()
-      self.debug(self.settings.debug, f'settings: {self.settings}')
+      self.debug(f'settings: {self.settings}')
       self.renamer = R.Renamer()
       self.regex = REG.ElmCopyRegex()
 
       cursor_location_region = self.view.sel()[0] # check if this is valid
-      self.debug(self.settings.debug, f"starting cursor region={cursor_location_region}")
+      self.debug(f"starting cursor region={cursor_location_region}")
 
       last_line_number_in_file = self.get_last_line_number(self.view)
-      self.debug(self.settings.debug, f"lines in the file={last_line_number_in_file}")
+      self.debug(f"lines in the file={last_line_number_in_file}")
 
       function_detail = self.find_top_of_function(self.view, cursor_location_region)
 
       start_of_function_definiton_region = function_detail.function_region
-      self.debug(self.settings.debug, f"function starting region={start_of_function_definiton_region}")
+      self.debug(f"function starting region={start_of_function_definiton_region}")
 
       function_name = function_detail.function_name
-      self.debug(self.settings.debug, f"function name={function_detail.function_name}")
+      self.debug(f"function name={function_detail.function_name}")
 
       starting_line = self.region_to_row(self.view, cursor_location_region)
-      self.debug(self.settings.debug, f"line number at cursor={starting_line}")
+      self.debug(f"line number at cursor={starting_line}")
 
       line = self.get_region_line(self.view, cursor_location_region)
-      self.debug(self.settings.debug, f"cursor line contents={line}")
+      self.debug(f"cursor line contents={line}")
 
       # We need to search for the bottom of the function, starting from the very top of the definition,
       # not, where the cursor is. This is because we want to handle let/in pairs, which can't be
       # tracked from the middle of the function
       end_of_function_implementation_region = self.find_bottom_of_function(self.view, start_of_function_definiton_region, last_line_number_in_file)
-      self.debug(self.settings.debug, f"function ending region={end_of_function_implementation_region}")
+      self.debug(f"function ending region={end_of_function_implementation_region}")
 
       self.replace_function(self.view, start_of_function_definiton_region, end_of_function_implementation_region, function_name)
     else:
@@ -90,15 +90,18 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
 
   def get_function_content(self, view: sublime.View, starting: sublime.Region, ending: sublime.Region) -> str:
     function_region = sublime.Region(starting.begin(), ending.end())
-    self.debug(self.settings.debug, f"body region: {function_region}")
+    self.debug(f"body region: {function_region}")
     function_body = self.get_all_region_lines(view, function_region)
-    self.debug(self.settings.debug, f"body: {function_body}")
+    self.debug(f"body: {function_body}")
     return function_body
 
   def rename_function(self, original_function: str, existing_name: str, new_name: str) -> str:
-    self.debug(self.settings.debug, f'renaming existing function name: {existing_name}')
-    renamed = self.renamer.rename(original_function, existing_name, new_name)
-    self.debug(self.settings.debug, f'renamed function: {renamed}')
+    self.debug(f'renaming existing function name: {existing_name}')
+    renamed_result = self.renamer.rename(original_function, existing_name, new_name)
+    renamed = renamed_result.final_result
+    self.debug(f'renamed function definition: {renamed_result.function_definition_replacement}')
+    self.debug(f'renamed function implementation: {renamed_result.function_implementation_replacement}')
+    self.debug(f'fully renamed function: {renamed}')
     return renamed
 
   def copy_function(self, view: sublime.View, function_content: str, ending: sublime.Region):
@@ -120,7 +123,7 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
 
       if len(function_names) != 0:
         # add a check for tuple with two elements
-        return FD.FunctionDetail(function_names[0][0], region)
+        return FD.FunctionDetail(function_names[0], region)
       else:
         line_number: int = self.region_to_row(view, region)
         prev_line_number: int = line_number - 1
@@ -146,7 +149,7 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
     while safe_guard <= max_lines_to_consider:
       line = self.get_region_line(view, region)
       current_line_number = self.region_to_row(view, region)
-      self.debug(self.settings.debug, f"iteration: {safe_guard} - line:{current_line_number} - [{line}], lets:{lets}")
+      self.debug(f"iteration: {safe_guard} - line:{current_line_number} - [{line}], lets:{lets}")
 
       if len(line) == 0 and lets == 0:
         return region
@@ -159,7 +162,7 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
           lets -= 1
 
         next_line_number: int = current_line_number + 1
-        self.debug(self.settings.debug, f"iteration: {safe_guard} - next line number:{next_line_number}, lets:{lets}")
+        self.debug(f"iteration: {safe_guard} - next line number:{next_line_number}, lets:{lets}")
 
         if next_line_number > last_line:
           return cast(sublime.Region, self.failOutOfBoundsError(last_line))
@@ -203,8 +206,8 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
   def log(self, message: str):
     print(f'[ElmCopy] - {message}')
 
-  def debug(self, debug: bool, message: str):
-    if debug:
+  def debug(self, message: str):
+    if self.settings.debug:
       print(f'[ElmCopy][DEBUG] - {message}')
 
 
