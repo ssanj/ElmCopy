@@ -2,7 +2,7 @@ import unittest
 
 import elm_copy_regex as R
 import re
-class RenamerTest(unittest.TestCase):
+class ElmCopyRegexTest(unittest.TestCase):
 
   def test_definition_on_single_line(self):
     line = "viewDaysWithZeroJobsLastWeek : Model -> List (Html Msg)"
@@ -24,7 +24,7 @@ class RenamerTest(unittest.TestCase):
     regex: str = R.ElmCopyRegex().function_def_reg
     result = re.findall(regex, line)
     if len(result) != 0:
-      print(f"result========================> {result}")
+      # print(f"result========================> {result}")
       self.assertEqual(result[0], expected_result)
     else:
       self.fail(f"Expected result to be have at least one element and at least one tuple in that element. Got: {result}")

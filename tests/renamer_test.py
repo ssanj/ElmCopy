@@ -107,10 +107,80 @@ getJobsExtended options =
 
     self.assert_rename(existing_name="getJobsByDate", new_name="getJobsExtended", existing_function=existing_function, expected_function=expected_function)
 
+  def test_arguments_with_brackets(self):
+    existing_function = r"""makeDateDefinitionRows : (Int, Api.Stats.Date) -> Html Msg
+makeDateDefinitionRows (index, dateDefinition) =
+    let
+        makeRowHeader : Html Msg
+        makeRowHeader =
+            Html.th
+                [ Attr.scope "row"
+                ]
+                [ Html.text (String.fromInt (index + 1)) ]
+
+
+        makeRowColumns : List (Html Msg)
+        makeRowColumns  =
+            [ Html.td
+                []
+                [ Html.text dateDefinition.date ]
+            ]
+    in
+      Html.tr
+        []
+        (makeRowHeader :: makeRowColumns)"""
+
+    expected_function = r"""anotherSeparator : (Int, Api.Stats.Date) -> Html Msg
+anotherSeparator (index, dateDefinition) =
+    let
+        makeRowHeader : Html Msg
+        makeRowHeader =
+            Html.th
+                [ Attr.scope "row"
+                ]
+                [ Html.text (String.fromInt (index + 1)) ]
+
+
+        makeRowColumns : List (Html Msg)
+        makeRowColumns  =
+            [ Html.td
+                []
+                [ Html.text dateDefinition.date ]
+            ]
+    in
+      Html.tr
+        []
+        (makeRowHeader :: makeRowColumns)"""
+
+    self.assert_rename(existing_name="makeDateDefinitionRows", new_name="anotherSeparator", existing_function=existing_function, expected_function=expected_function)
+
+
+  def test_no_arguments_with_curlies(self):
+    existing_function = r"""getJobsNotRunLastWeek : { baseApiUrl : String, onResponse : ApplyResult (List (Html msg)) ( Metadata, (List Date) ) -> msg } -> Effect msg
+getJobsNotRunLastWeek { baseApiUrl, onResponse } =
+  getStatsEndpoint {
+    baseApiUrl = baseApiUrl
+  , statsUrl =  "days-zero-jobs-last-week"
+  , statsDecoder = getDatesDecoder
+  , onResponse = onResponse
+  }"""
+
+    expected_function = r"""xyzJobs : { baseApiUrl : String, onResponse : ApplyResult (List (Html msg)) ( Metadata, (List Date) ) -> msg } -> Effect msg
+xyzJobs { baseApiUrl, onResponse } =
+  getStatsEndpoint {
+    baseApiUrl = baseApiUrl
+  , statsUrl =  "days-zero-jobs-last-week"
+  , statsDecoder = getDatesDecoder
+  , onResponse = onResponse
+  }"""
+
+    self.assert_rename(existing_name="getJobsNotRunLastWeek", new_name="xyzJobs", existing_function=existing_function, expected_function=expected_function)
+
 
   def assert_rename(self, existing_name: str, new_name: str, existing_function: str , expected_function: str) -> None:
     renamer = R.Renamer()
     new_function = renamer.rename(existing_function, existing_name, new_name)
+    # print(f'new_function===========================> {new_function}')
     self.assertEqual(new_function, expected_function)
 
 if __name__ == '__main__':
