@@ -5,16 +5,13 @@ from . import function_detail as FD
 from . import settings_loader as SL
 from . import elm_copy_setting as ECS
 from . import renamer as R
+from . import elm_copy_regex as REG
 
 import re
 
 class ElmCopyCommand(sublime_plugin.TextCommand):
 
   print("elm_copy command has loaded.")
-
-  function_def_reg: str = r'^([a-z][a-z|A-Z|0-9]*)\s*:(\s*$|\s*[A-Z])'
-  let_statement_reg = r'^\s+let(\s*$|\s+[A-Z|a-z|0-9]+)'
-  in_statement_reg = r'^\s+in(\s*$|\s+[A-Z|a-z|0-9]+)'
 
   def run(self, edit: sublime.Edit) -> None:
     if self and self.view:
@@ -23,6 +20,7 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
       self.settings: ECS.ElmCopySetting = self.load_settings()
       self.debug(self.settings.debug, f'settings: {self.settings}')
       self.renamer = R.Renamer()
+      self.regex = REG.ElmCopyRegex()
 
       cursor_location_region = self.view.sel()[0] # check if this is valid
       self.debug(self.settings.debug, f"starting cursor region={cursor_location_region}")
@@ -118,7 +116,7 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
 
     while safe_guard <= max_lines_to_consider:
       line = self.get_region_line(view, region)
-      function_names = re.findall(ElmCopyCommand.function_def_reg, line)
+      function_names = re.findall(self.regex.function_def_reg, line)
 
       if len(function_names) != 0:
         # add a check for tuple with two elements
@@ -153,10 +151,10 @@ class ElmCopyCommand(sublime_plugin.TextCommand):
       if len(line) == 0 and lets == 0:
         return region
       else:
-        if re.match(ElmCopyCommand.let_statement_reg, line) is not None:
+        if re.match(self.regex.let_statement_reg, line) is not None:
           # check for let, increment if found
           lets += 1
-        elif re.match(ElmCopyCommand.in_statement_reg, line) is not None:
+        elif re.match(self.regex.in_statement_reg, line) is not None:
           # check for in, decrement lets if found
           lets -= 1
 

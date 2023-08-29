@@ -1,3 +1,4 @@
 #!/bin/bash
 cd ..
+MYPYPATH=./ElmCopy/typings /Users/sanj/.installations/bin/mypy  ElmCopy/elm_copy.py
 MYPYPATH=./ElmCopy/typings chokidar "./ElmCopy/**/*.py" -c "/Users/sanj/.installations/bin/mypy  ElmCopy/elm_copy.py"
