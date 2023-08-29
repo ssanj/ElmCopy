@@ -11,7 +11,7 @@ import re
 
 class ElmCopyCommand(sublime_plugin.TextCommand):
 
-  print("elm_copy command has loaded 2.")
+  print("elm_copy command has loaded.")
 
   def run(self, edit: sublime.Edit) -> None:
     if self and self.view:
